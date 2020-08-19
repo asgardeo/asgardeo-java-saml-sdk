@@ -124,16 +124,6 @@
                 <version>1.62</version>
             </dependency>
             <dependency>
-                <groupId>org.openid4java</groupId>
-                <artifactId>openid4java</artifactId>
-                <version>${openid4java.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.oltu.oauth2</groupId>
-                <artifactId>org.apache.oltu.oauth2.client</artifactId>
-                <version>${org.apache.oltu.oauth2.client.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.wso2.orbit.org.apache.oltu.oauth2</groupId>
                 <artifactId>oltu</artifactId>
                 <version>${oltu.version}</version>
@@ -177,11 +167,6 @@
                 <groupId>org.wso2.carbon.identity.saml.common</groupId>
                 <artifactId>org.wso2.carbon.identity.saml.common.util</artifactId>
                 <version>${saml.common.util.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.carbon.identity.agent.sso.java</groupId>
-                <artifactId>org.wso2.carbon.identity.sso.agent.saml</artifactId>
-                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.agent.sso.java</groupId>
@@ -352,13 +337,8 @@
     </properties>
 
     <modules>
-        <module>components/org.wso2.carbon.identity.sso.agent</module>
         <module>components/org.wso2.carbon.identity.sso.agent.saml</module>
         <module>features/org.wso2.carbon.identity.sso.agent.server.feature</module>
-        <module>components/org.wso2.carbon.identity.sso.encryptor</module>
-        <module>components/org.wso2.carbon.identity.sso.tomcat.server</module>
-        <module>resources/SampleApp</module>
-        <module>resources/SampleApp-boilerplate</module>
     </modules>
 
 </project>
