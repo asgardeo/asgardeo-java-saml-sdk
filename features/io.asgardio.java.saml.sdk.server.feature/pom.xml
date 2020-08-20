@@ -28,7 +28,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>io.asgardio.java.saml.sdk.server.feature</artifactId>
     <packaging>pom</packaging>
-    <name>Java SAML SDK server feature</name>
+    <name>Java SAML SDK Server Feature</name>
     <url>http://asgardio.io</url>
     <description>This feature contains a SDK which is a library for sso</description>
 
@@ -51,10 +51,6 @@
         <dependency>
             <groupId>org.wso2.orbit.joda-time</groupId>
             <artifactId>joda-time</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.orbit.org.openid4java</groupId>
-            <artifactId>openid4java</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.orbit.org.apache.oltu.oauth2</groupId>
@@ -92,7 +88,6 @@
                                 <bundleDef>io.asgardio.java.saml.sdk:io.asgardio.java.saml.sdk</bundleDef>
                                 <bundleDef>org.wso2.orbit.org.opensaml:opensaml</bundleDef>
                                 <bundleDef>org.wso2.orbit.joda-time:joda-time</bundleDef>
-                                <bundleDef>org.wso2.orbit.org.openid4java:openid4java</bundleDef>
                                 <bundleDef>org.wso2.orbit.org.apache.oltu.oauth2:oltu</bundleDef>
                                 <bundleDef>org.wso2.orbit.org.apache.httpcomponents:httpclient</bundleDef>
                                 <bundleDef>net.sf.ehcache.wso2:ehcache</bundleDef>
