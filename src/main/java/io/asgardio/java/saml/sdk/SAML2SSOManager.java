@@ -123,7 +123,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import static org.wso2.carbon.CarbonConstants.AUDIT_LOG;
-import static org.wso2.carbon.identity.core.util.IdentityCoreConstants.MULTI_ATTRIBUTE_SEPARATOR;
 
 /**
  * TODO: Need to have mechanism to map SP initiated SAML2 Request to SAML2 Responses and validate.
