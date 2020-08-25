@@ -95,14 +95,10 @@ import io.asgardio.java.saml.sdk.bean.SSOAgentConfig;
 import io.asgardio.java.saml.sdk.exception.ArtifactResolutionException;
 import io.asgardio.java.saml.sdk.exception.InvalidSessionException;
 import io.asgardio.java.saml.sdk.exception.SSOAgentException;
-import io.asgardio.java.saml.sdk.internal.SSOAgentServiceComponent;
 import io.asgardio.java.saml.sdk.security.X509CredentialImpl;
 import io.asgardio.java.saml.sdk.util.SSOAgentConstants;
 import io.asgardio.java.saml.sdk.util.SSOAgentDataHolder;
 import io.asgardio.java.saml.sdk.util.SSOAgentUtils;
-import org.wso2.carbon.user.api.UserRealm;
-import org.wso2.carbon.user.api.UserStoreException;
-import org.wso2.carbon.user.core.UserStoreManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -795,20 +791,6 @@ public class SAML2SSOManager {
 
         Map<String, String> results = new HashMap<String, String>();
         String multiAttributeSeparator = DEFAULT_MULTI_ATTRIBUTE_SEPARATOR;
-
-        UserRealm realm;
-        try {
-            if (SSOAgentServiceComponent.getRealmService() != null) {
-                realm = SSOAgentServiceComponent.getRealmService().getTenantUserRealm
-                        (org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_ID);
-                UserStoreManager userStoreManager = (UserStoreManager) realm.getUserStoreManager();
-
-                multiAttributeSeparator = userStoreManager.
-                        getRealmConfiguration().getUserStoreProperty(MULTI_ATTRIBUTE_SEPARATOR);
-            }
-        } catch (UserStoreException e) {
-            log.warn("Error while reading MultiAttributeSeparator value from primary user store ", e);
-        }
 
         if (assertion != null && assertion.getAttributeStatements() != null) {
 
