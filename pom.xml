@@ -332,8 +332,7 @@
     </properties>
 
     <modules>
-        <module>components/io.asgardio.java.saml.sdk</module>
-        <module>features/io.asgardio.java.saml.sdk.server.feature</module>
+        <module>io.asgardio.java.saml.sdk</module>
     </modules>
 
 </project>

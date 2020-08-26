@@ -23,7 +23,7 @@
     <parent>
         <groupId>io.asgardio.java.saml.sdk</groupId>
         <artifactId>java-saml-sdk</artifactId>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
         <version>0.1.1-SNAPSHOT</version>
     </parent>
 
