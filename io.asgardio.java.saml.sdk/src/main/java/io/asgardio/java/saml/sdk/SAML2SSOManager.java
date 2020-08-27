@@ -95,14 +95,10 @@ import io.asgardio.java.saml.sdk.bean.SSOAgentConfig;
 import io.asgardio.java.saml.sdk.exception.ArtifactResolutionException;
 import io.asgardio.java.saml.sdk.exception.InvalidSessionException;
 import io.asgardio.java.saml.sdk.exception.SSOAgentException;
-import io.asgardio.java.saml.sdk.internal.SSOAgentServiceComponent;
 import io.asgardio.java.saml.sdk.security.X509CredentialImpl;
 import io.asgardio.java.saml.sdk.util.SSOAgentConstants;
 import io.asgardio.java.saml.sdk.util.SSOAgentDataHolder;
 import io.asgardio.java.saml.sdk.util.SSOAgentUtils;
-import org.wso2.carbon.user.api.UserRealm;
-import org.wso2.carbon.user.api.UserStoreException;
-import org.wso2.carbon.user.core.UserStoreManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -127,7 +123,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import static org.wso2.carbon.CarbonConstants.AUDIT_LOG;
-import static org.wso2.carbon.identity.core.util.IdentityCoreConstants.MULTI_ATTRIBUTE_SEPARATOR;
 
 /**
  * TODO: Need to have mechanism to map SP initiated SAML2 Request to SAML2 Responses and validate.
@@ -795,20 +790,6 @@ public class SAML2SSOManager {
 
         Map<String, String> results = new HashMap<String, String>();
         String multiAttributeSeparator = DEFAULT_MULTI_ATTRIBUTE_SEPARATOR;
-
-        UserRealm realm;
-        try {
-            if (SSOAgentServiceComponent.getRealmService() != null) {
-                realm = SSOAgentServiceComponent.getRealmService().getTenantUserRealm
-                        (org.wso2.carbon.base.MultitenantConstants.SUPER_TENANT_ID);
-                UserStoreManager userStoreManager = (UserStoreManager) realm.getUserStoreManager();
-
-                multiAttributeSeparator = userStoreManager.
-                        getRealmConfiguration().getUserStoreProperty(MULTI_ATTRIBUTE_SEPARATOR);
-            }
-        } catch (UserStoreException e) {
-            log.warn("Error while reading MultiAttributeSeparator value from primary user store ", e);
-        }
 
         if (assertion != null && assertion.getAttributeStatements() != null) {
 
