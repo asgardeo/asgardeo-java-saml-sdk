@@ -179,7 +179,7 @@ public class SAML2SSOManager {
             if (sessionBean != null) {
                 requestMessage = buildLogoutRequest(sessionBean.getSAML2SSO().getSubjectId(),
                         sessionBean.getSAML2SSO().getSessionIndex());
-                request.getSession().setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME, requestMessage.getID());
+                httpSession.setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME, requestMessage.getID());
             } else {
                 throw new SSOAgentException("SLO Request can not be built. SSO Session is NULL");
             }
@@ -267,7 +267,7 @@ public class SAML2SSOManager {
             if (sessionBean != null) {
                 requestMessage = buildLogoutRequest(sessionBean.getSAML2SSO()
                         .getSubjectId(), sessionBean.getSAML2SSO().getSessionIndex());
-                request.getSession().setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME, requestMessage.getID());
+                httpSession.setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME, requestMessage.getID());
                 if (ssoAgentConfig.getSAML2().isRequestSigned()) {
                     requestMessage = SSOAgentUtils.setSignature((LogoutRequest) requestMessage,
                             XMLSignature.ALGO_ID_SIGNATURE_RSA,
@@ -370,7 +370,7 @@ public class SAML2SSOManager {
             String requestId = (String) session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME);
             session.removeAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME);
             if (requestId.equals(inResponseToValue)) {
-                LOGGER.log(Level.INFO, "InResponseTo Validation successful.");
+                LOGGER.log(Level.FINE, "InResponseTo Validation successful.");
                 return;
             }
         }
