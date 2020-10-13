@@ -71,6 +71,7 @@ public class SSOAgentConfig {
     private String saml2SSOURL = null;
     private Set<String> skipURIs = new HashSet<String>();
     private String indexPage;
+    private String errorPage;
 
     private Map<String, String[]> queryParams = new HashMap<String, String[]>();
 
@@ -133,6 +134,16 @@ public class SSOAgentConfig {
     public void setIndexPage(String indexPage) {
 
         this.indexPage = indexPage;
+    }
+
+    public String getErrorPage() {
+
+        return errorPage;
+    }
+
+    public void setErrorPage(String errorPage) {
+
+        this.errorPage = errorPage;
     }
 
     public Map<String, String[]> getQueryParams() {
@@ -318,6 +329,13 @@ public class SSOAgentConfig {
             } catch (URISyntaxException e) {
                 throw new SSOAgentException("Error while fetching index page URL.", e);
             }
+        }
+
+        if (StringUtils.isNotBlank(properties.getProperty(SSOAgentConstants.SSOAgentConfig.ERROR_PAGE))) {
+            setErrorPage(properties.getProperty(SSOAgentConstants.SSOAgentConfig.ERROR_PAGE));
+            skipURIs.add(errorPage);
+        } else {
+            setErrorPage(indexPage);
         }
 
         String queryParamsString = properties.getProperty(SSOAgentConstants.SSOAgentConfig.QUERY_PARAMS);
