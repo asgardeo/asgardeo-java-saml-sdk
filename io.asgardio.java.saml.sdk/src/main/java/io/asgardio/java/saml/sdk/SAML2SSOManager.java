@@ -69,6 +69,7 @@ import org.opensaml.saml.saml2.core.SessionIndex;
 import org.opensaml.saml.saml2.core.Status;
 import org.opensaml.saml.saml2.core.StatusCode;
 import org.opensaml.saml.saml2.core.StatusMessage;
+import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.impl.AuthnContextClassRefBuilder;
 import org.opensaml.saml.saml2.core.impl.AuthnRequestBuilder;
 import org.opensaml.saml.saml2.core.impl.IssuerBuilder;
@@ -165,12 +166,12 @@ public class SAML2SSOManager {
     public String buildRedirectRequest(HttpServletRequest request, boolean isLogout) throws SSOAgentException {
 
         RequestAbstractType requestMessage;
+        HttpSession httpSession;
         if (!isLogout) {
-            HttpSession httpSession = request.getSession();
+            httpSession = request.getSession();
             requestMessage = buildAuthnRequest(request);
-            setIDtoSession(httpSession, requestMessage.getID());
         } else {
-            HttpSession httpSession = request.getSession(false);
+            httpSession = request.getSession(false);
             if (httpSession == null) {
                 throw new InvalidSessionException("Session is expired or user already logged out.");
             }
@@ -180,11 +181,12 @@ public class SAML2SSOManager {
             if (sessionBean != null) {
                 requestMessage = buildLogoutRequest(sessionBean.getSAML2SSO().getSubjectId(),
                         sessionBean.getSAML2SSO().getSessionIndex());
-                setIDtoSession(httpSession, requestMessage.getID());
             } else {
                 throw new SSOAgentException("SLO Request can not be built. SSO Session is NULL");
             }
         }
+        setIDtoSession(httpSession, requestMessage.getID());
+
         String idpUrl = null;
 
         String encodedRequestMessage = encodeRequestMessage(
@@ -367,8 +369,9 @@ public class SAML2SSOManager {
         }
     }
 
-    private void validateInResponseTo(String inResponseToValue, HttpSession session) throws SSOAgentException {
+    private void validateInResponseTo(StatusResponseType samlResponse, HttpSession session) throws SSOAgentException {
 
+        String inResponseToValue = samlResponse.getInResponseTo();
         if (StringUtils.isNotBlank(inResponseToValue)) {
             if (session != null && session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME) != null) {
                 String requestId = (String) session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME);
@@ -499,7 +502,7 @@ public class SAML2SSOManager {
                  * invalidated by the system
                  */
                 LogoutResponse logoutResponse = ((LogoutResponse) saml2Object);
-                validateInResponseTo(logoutResponse.getInResponseTo(), request.getSession(false));
+                validateInResponseTo(logoutResponse, request.getSession(false));
                 Set<HttpSession> sessions =
                         SSOAgentSessionManager.invalidateAllSessions(request.getSession(false));
                 for (HttpSession session : sessions) {
@@ -577,7 +580,7 @@ public class SAML2SSOManager {
         }
         if (assertion == null) {
             if (isNoPassive(saml2Response)) {
-                validateInResponseTo(saml2Response.getInResponseTo(), servletRequest.getSession(false));
+                validateInResponseTo(saml2Response, servletRequest.getSession(false));
                 LOGGER.log(Level.FINE, "Cannot authenticate in passive mode");
                 servletRequest.setAttribute(
                         SSOAgentConstants.SHOULD_GO_TO_WELCOME_PAGE,
@@ -605,7 +608,7 @@ public class SAML2SSOManager {
         // validate signature
         validateSignature(saml2Response, assertion);
 
-        validateInResponseTo(saml2Response.getInResponseTo(), servletRequest.getSession(false));
+        validateInResponseTo(saml2Response, servletRequest.getSession(false));
 
         // Get the subject name from the Response Object and forward it to login_action.jsp
         String subject = null;
