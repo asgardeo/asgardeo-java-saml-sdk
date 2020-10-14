@@ -31,6 +31,7 @@ public class SSOAgentConstants {
     public static final String CONFIG_BEAN_NAME = "org.wso2.carbon.identity.sso.agent.SSOAgentConfig";
 
     public static final String SHOULD_GO_TO_WELCOME_PAGE = "shouldGoToWelcomePage";
+    public static final String SSO_AGENT_EXCEPTION = "SSOAgentException";
     public static final String PROPERTY_FILE_PARAMETER_NAME = "property-file";
     public static final String CERTIFICATE_FILE_PARAMETER_NAME = "certificate-file";
 
@@ -58,6 +59,7 @@ public class SSOAgentConstants {
         public static final String QUERY_PARAMS = "QueryParams";
         public static final String PASSWORD_FILEPATH = "/conf/password_temp.txt";
         public static final String INDEX_PAGE = "IndexPage";
+        public static final String ERROR_PAGE = "ErrorPage";
 
         private SSOAgentConfig() {
 
