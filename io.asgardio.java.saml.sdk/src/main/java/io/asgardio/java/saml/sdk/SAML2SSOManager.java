@@ -19,7 +19,16 @@
 package io.asgardio.java.saml.sdk;
 
 import io.asgardio.java.saml.sdk.artifact.SAMLSSOArtifactResolutionService;
+import io.asgardio.java.saml.sdk.bean.LoggedInSessionBean;
+import io.asgardio.java.saml.sdk.bean.SSOAgentConfig;
+import io.asgardio.java.saml.sdk.exception.ArtifactResolutionException;
+import io.asgardio.java.saml.sdk.exception.InvalidSessionException;
+import io.asgardio.java.saml.sdk.exception.SSOAgentException;
+import io.asgardio.java.saml.sdk.security.X509CredentialImpl;
 import io.asgardio.java.saml.sdk.session.management.SSOAgentSessionManager;
+import io.asgardio.java.saml.sdk.util.SSOAgentConstants;
+import io.asgardio.java.saml.sdk.util.SSOAgentDataHolder;
+import io.asgardio.java.saml.sdk.util.SSOAgentUtils;
 import net.shibboleth.utilities.java.support.codec.Base64Support;
 import net.shibboleth.utilities.java.support.xml.SerializeSupport;
 import org.apache.commons.collections.CollectionUtils;
@@ -60,6 +69,7 @@ import org.opensaml.saml.saml2.core.SessionIndex;
 import org.opensaml.saml.saml2.core.Status;
 import org.opensaml.saml.saml2.core.StatusCode;
 import org.opensaml.saml.saml2.core.StatusMessage;
+import org.opensaml.saml.saml2.core.StatusResponseType;
 import org.opensaml.saml.saml2.core.impl.AuthnContextClassRefBuilder;
 import org.opensaml.saml.saml2.core.impl.AuthnRequestBuilder;
 import org.opensaml.saml.saml2.core.impl.IssuerBuilder;
@@ -90,15 +100,6 @@ import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
-import io.asgardio.java.saml.sdk.bean.LoggedInSessionBean;
-import io.asgardio.java.saml.sdk.bean.SSOAgentConfig;
-import io.asgardio.java.saml.sdk.exception.ArtifactResolutionException;
-import io.asgardio.java.saml.sdk.exception.InvalidSessionException;
-import io.asgardio.java.saml.sdk.exception.SSOAgentException;
-import io.asgardio.java.saml.sdk.security.X509CredentialImpl;
-import io.asgardio.java.saml.sdk.util.SSOAgentConstants;
-import io.asgardio.java.saml.sdk.util.SSOAgentDataHolder;
-import io.asgardio.java.saml.sdk.util.SSOAgentUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -164,11 +165,13 @@ public class SAML2SSOManager {
      */
     public String buildRedirectRequest(HttpServletRequest request, boolean isLogout) throws SSOAgentException {
 
-        RequestAbstractType requestMessage = null;
+        RequestAbstractType requestMessage;
+        HttpSession httpSession;
         if (!isLogout) {
+            httpSession = request.getSession();
             requestMessage = buildAuthnRequest(request);
         } else {
-            HttpSession httpSession = request.getSession(false);
+            httpSession = request.getSession(false);
             if (httpSession == null) {
                 throw new InvalidSessionException("Session is expired or user already logged out.");
             }
@@ -182,6 +185,8 @@ public class SAML2SSOManager {
                 throw new SSOAgentException("SLO Request can not be built. SSO Session is NULL");
             }
         }
+        setIDtoSession(httpSession, requestMessage.getID());
+
         String idpUrl = null;
 
         String encodedRequestMessage = encodeRequestMessage(
@@ -245,9 +250,11 @@ public class SAML2SSOManager {
     public String buildPostRequest(HttpServletRequest request, HttpServletResponse response,
                                    boolean isLogout) throws SSOAgentException {
 
-        RequestAbstractType requestMessage = null;
+        RequestAbstractType requestMessage;
         if (!isLogout) {
+            HttpSession httpSession = request.getSession();
             requestMessage = buildAuthnRequest(request);
+            setIDtoSession(httpSession, requestMessage.getID());
             if (ssoAgentConfig.getSAML2().isRequestSigned()) {
                 requestMessage = SSOAgentUtils.setSignature((AuthnRequest) requestMessage,
                         XMLSignature.ALGO_ID_SIGNATURE_RSA,
@@ -265,6 +272,7 @@ public class SAML2SSOManager {
             if (sessionBean != null) {
                 requestMessage = buildLogoutRequest(sessionBean.getSAML2SSO()
                         .getSubjectId(), sessionBean.getSAML2SSO().getSessionIndex());
+                setIDtoSession(httpSession, requestMessage.getID());
                 if (ssoAgentConfig.getSAML2().isRequestSigned()) {
                     requestMessage = SSOAgentUtils.setSignature((LogoutRequest) requestMessage,
                             XMLSignature.ALGO_ID_SIGNATURE_RSA,
@@ -361,6 +369,28 @@ public class SAML2SSOManager {
         }
     }
 
+    private void validateInResponseTo(StatusResponseType samlResponse, HttpSession session) throws SSOAgentException {
+
+        String inResponseToValue = samlResponse.getInResponseTo();
+        if (StringUtils.isNotBlank(inResponseToValue)) {
+            if (session != null && session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME) != null) {
+                String requestId = (String) session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME);
+                session.removeAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME);
+                if (requestId.equals(inResponseToValue)) {
+                    LOGGER.log(Level.FINE, "InResponseTo Validation successful.");
+                    return;
+                }
+            }
+            log.fatal(String.format("Validation failed for InResponseTo ID: %s", inResponseToValue));
+            throw new SSOAgentException("ID validation failed.");
+        }
+    }
+
+    private void setIDtoSession(HttpSession httpSession, String saml2RequestId) {
+
+        httpSession.setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME, saml2RequestId);
+    }
+
     /**
      * Process authentication response with SAML2 artifact.
      *
@@ -374,7 +404,6 @@ public class SAML2SSOManager {
         try {
             ArtifactResponse artifactResponse = artifactResolutionService.getSAMLArtifactResponse(
                     request.getParameter(SSOAgentConstants.SAML2SSO.SAML2_ARTIFACT_RESP));
-
             if (!StringUtils.equals(artifactResponse.getStatus().getStatusCode().getValue(), StatusCode.SUCCESS)) {
                 throw new SSOAgentException("Received an invalid SAML response with status code: " +
                         artifactResponse.getStatus().getStatusCode().getValue());
@@ -472,6 +501,8 @@ public class SAML2SSOManager {
                  * still waiting to get triggered and at the end of the chain session needs to be
                  * invalidated by the system
                  */
+                LogoutResponse logoutResponse = ((LogoutResponse) saml2Object);
+                validateInResponseTo(logoutResponse, request.getSession(false));
                 Set<HttpSession> sessions =
                         SSOAgentSessionManager.invalidateAllSessions(request.getSession(false));
                 for (HttpSession session : sessions) {
@@ -549,6 +580,7 @@ public class SAML2SSOManager {
         }
         if (assertion == null) {
             if (isNoPassive(saml2Response)) {
+                validateInResponseTo(saml2Response, servletRequest.getSession(false));
                 LOGGER.log(Level.FINE, "Cannot authenticate in passive mode");
                 servletRequest.setAttribute(
                         SSOAgentConstants.SHOULD_GO_TO_WELCOME_PAGE,
@@ -575,6 +607,8 @@ public class SAML2SSOManager {
 
         // validate signature
         validateSignature(saml2Response, assertion);
+
+        validateInResponseTo(saml2Response, servletRequest.getSession(false));
 
         // Get the subject name from the Response Object and forward it to login_action.jsp
         String subject = null;
@@ -734,7 +768,6 @@ public class SAML2SSOManager {
         if (request.getAttribute(Extensions.DEFAULT_ELEMENT_LOCAL_NAME) != null) {
             authRequest.setExtensions((Extensions) request.getAttribute(Extensions.DEFAULT_ELEMENT_LOCAL_NAME));
         }
-
         /* Requesting Attributes. This Index value is registered in the IDP */
         if (ssoAgentConfig.getSAML2().getAttributeConsumingServiceIndex() != null &&
                 ssoAgentConfig.getSAML2().getAttributeConsumingServiceIndex().trim().length() > 0) {
