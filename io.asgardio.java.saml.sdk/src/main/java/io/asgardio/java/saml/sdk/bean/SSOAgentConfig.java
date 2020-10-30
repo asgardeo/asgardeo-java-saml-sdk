@@ -582,11 +582,7 @@ public class SSOAgentConfig {
     	ssoAgentConfigNew.requestQueryParameters = ssoAgentConfig.requestQueryParameters;
     	ssoAgentConfigNew.enableSSLVerification = ssoAgentConfig.enableSSLVerification;
     	ssoAgentConfigNew.saml2SSOURL = ssoAgentConfig.saml2SSOURL;
-    	//TODO 
-    	//mozno treba kopiu pola
     	ssoAgentConfigNew.skipURIs = ssoAgentConfig.skipURIs;
-    	//TODO
-    	//mozno treba kopiu pola
     	ssoAgentConfigNew.queryParams= ssoAgentConfig.queryParams;
     	
     	
