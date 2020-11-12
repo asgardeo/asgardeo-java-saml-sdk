@@ -35,9 +35,9 @@ If you want to build **identity-agent-sso** from the source code:
 Install it as a maven dependency:
 ```
 <dependency>
-    <groupId>org.wso2.carbon.identity.agent.sso.java</groupId>
-    <artifactId>org.wso2.carbon.identity.sso.tomcat.server</artifactId>
-    <version>5.5.5</version>
+    <groupId>io.asgardio.java.saml.sdk</groupId>
+    <artifactId>io.asgardio.java.saml.sdk</artifactId>
+    <version>0.1.5</version>
 </dependency>
 ```
 The SDK is hosted at the WSO2 Internal Repository. Point to the repository as follows:

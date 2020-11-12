@@ -21,7 +21,8 @@ package io.asgardio.java.saml.sdk.util;
 public class SSOAgentConstants {
 
     public static final String KEY_STORE_PASSWORD = "KeyStorePassword";
-    public static final String IDP_PUBLIC_CERT = "IdPPublicCertAlias";
+    public static final String IDP_PUBLIC_CERT_ALIAS = "IdPPublicCertAlias";
+    public static final String IDP_PUBLIC_CERT = "IdPPublicCert";
     public static final String PRIVATE_KEY_ALIAS = "PrivateKeyAlias";
     public static final String PRIVATE_KEY_PASSWORD = "PrivateKeyPassword";
 

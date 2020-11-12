@@ -21,9 +21,11 @@
 package io.asgardio.java.saml.sdk.security;
 
 import io.asgardio.java.saml.sdk.exception.SSOAgentException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -32,7 +34,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 
 public class SSOAgentX509KeyStoreCredential implements SSOAgentX509Credential {
 
@@ -45,7 +50,7 @@ public class SSOAgentX509KeyStoreCredential implements SSOAgentX509Credential {
                                           String privateKeyAlias, char[] privateKeyPassword)
             throws SSOAgentException {
 
-        readX509Credentials(keyStore, publicCertAlias, privateKeyAlias, privateKeyPassword);
+        this(keyStore, publicCertAlias, null, privateKeyAlias, privateKeyPassword);
     }
 
     public SSOAgentX509KeyStoreCredential(InputStream keyStoreInputStream, char[] keyStorePassword,
@@ -53,7 +58,23 @@ public class SSOAgentX509KeyStoreCredential implements SSOAgentX509Credential {
                                           char[] privateKeyPassword)
             throws SSOAgentException {
 
-        readX509Credentials(keyStoreInputStream, keyStorePassword, publicCertAlias,
+        this(keyStoreInputStream, keyStorePassword, publicCertAlias, null, privateKeyAlias,
+                privateKeyPassword);
+    }
+
+    public SSOAgentX509KeyStoreCredential(KeyStore keyStore, String publicCertAlias, String publicCertEncoded,
+                                          String privateKeyAlias, char[] privateKeyPassword)
+            throws SSOAgentException {
+
+        readX509Credentials(keyStore, publicCertAlias, publicCertEncoded, privateKeyAlias, privateKeyPassword);
+    }
+
+    public SSOAgentX509KeyStoreCredential(InputStream keyStoreInputStream, char[] keyStorePassword,
+                                          String publicCertAlias, String publicCertEncoded, String privateKeyAlias,
+                                          char[] privateKeyPassword)
+            throws SSOAgentException {
+
+        readX509Credentials(keyStoreInputStream, keyStorePassword, publicCertAlias, publicCertEncoded,
                 privateKeyAlias, privateKeyPassword);
     }
 
@@ -75,44 +96,50 @@ public class SSOAgentX509KeyStoreCredential implements SSOAgentX509Credential {
         return entityCertificate;
     }
 
-    protected void readX509Credentials(KeyStore keyStore, String publicCertAlias,
+    protected void readX509Credentials(KeyStore keyStore, String publicCertAlias, String publicCertEncoded,
                                        String privateKeyAlias, char[] privateKeyPassword)
             throws SSOAgentException {
 
         try {
-            entityCertificate = (X509Certificate) keyStore.getCertificate(publicCertAlias);
+            if (StringUtils.isNotEmpty(publicCertAlias)) {
+                entityCertificate = (X509Certificate) keyStore.getCertificate(publicCertAlias);
+            } else if (StringUtils.isNotEmpty(publicCertEncoded)) {
+                entityCertificate = inferPublicCertFromEncodedString(publicCertEncoded);
+            }
         } catch (KeyStoreException e) {
             throw new SSOAgentException(
                     "Error occurred while retrieving public certificate for alias " +
                             publicCertAlias, e);
+        } catch (CertificateException e) {
+            throw new SSOAgentException(
+                    "Error occurred while inferring public certificate from encoded string ", e);
         }
         publicKey = entityCertificate.getPublicKey();
         try {
             privateKey = (PrivateKey) keyStore.getKey(privateKeyAlias, privateKeyPassword);
-        } catch (KeyStoreException e) {
-            throw new SSOAgentException(
-                    "Error occurred while retrieving private key for alias " +
-                            privateKeyAlias, e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new SSOAgentException(
-                    "Error occurred while retrieving private key for alias " +
-                            privateKeyAlias, e);
-        } catch (UnrecoverableKeyException e) {
+        } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
             throw new SSOAgentException(
                     "Error occurred while retrieving private key for alias " +
                             privateKeyAlias, e);
         }
     }
 
+    private X509Certificate inferPublicCertFromEncodedString(String encodedCert) throws CertificateException {
+
+        byte[] decoded = Base64.getDecoder().decode(encodedCert);
+        return (X509Certificate) CertificateFactory.getInstance("X.509")
+                .generateCertificate(new ByteArrayInputStream(decoded));
+    }
+
     protected void readX509Credentials(InputStream keyStoreInputStream, char[] keyStorePassword,
-                                       String publicCertAlias, String privateKeyAlias,
+                                       String publicCertAlias, String publicCertEncoded, String privateKeyAlias,
                                        char[] privateKeyPassword)
             throws SSOAgentException {
 
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(keyStoreInputStream, keyStorePassword);
-            readX509Credentials(keyStore, publicCertAlias, privateKeyAlias, privateKeyPassword);
+            readX509Credentials(keyStore, publicCertAlias, publicCertEncoded, privateKeyAlias, privateKeyPassword);
         } catch (Exception e) {
             throw new SSOAgentException("Error while loading key store file", e);
         } finally {
