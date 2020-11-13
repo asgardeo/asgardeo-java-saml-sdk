@@ -27,9 +27,9 @@
     <groupId>io.asgardio.java.saml.sdk</groupId>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>java-saml-sdk</artifactId>
-    <version>0.1.5-SNAPSHOT</version>
+    <version>0.1.6-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Asgardio - Java SAML SDK</name>
+    <name>Asgardio - Java SAML SDK Parent Module</name>
     <description>
         The Asgardio SAML SDK for Java enables software developers to integrate SAML based SSO authentication with Java
         Web applications. The SDK is built on top of the OpenSAML library which allows Java developers to develop

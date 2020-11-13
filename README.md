@@ -43,8 +43,8 @@ Install it as a maven dependency:
 ```
 <dependency>
     <groupId>io.asgardio.java.saml.sdk</groupId>
-    <artifactId>java-saml-sdk</artifactId>
-    <version>0.1.4</version>
+    <artifactId>io.asgardio.java.saml.sdk</artifactId>
+    <version>0.1.5</version>
 </dependency>
 ```
 The SDK is hosted at the WSO2 Internal Repository. Point to the repository as follows:
