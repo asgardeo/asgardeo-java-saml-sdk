@@ -24,23 +24,23 @@
         <version>1.2</version>
     </parent>
 
-    <groupId>io.asgardio.java.saml.sdk</groupId>
+    <groupId>io.asgardeo.java.saml.sdk</groupId>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>java-saml-sdk</artifactId>
     <version>0.1.7-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Asgardio - Java SAML SDK Parent Module</name>
+    <name>Asgardeo - Java SAML SDK Parent Module</name>
     <description>
-        The Asgardio SAML SDK for Java enables software developers to integrate SAML based SSO authentication with Java
+        The asgardeo SAML SDK for Java enables software developers to integrate SAML based SSO authentication with Java
         Web applications. The SDK is built on top of the OpenSAML library which allows Java developers to develop
         cross-domain single sign-on and federated access control solutions with minimum hassle.
     </description>
-    <url>http://asgardio.io</url>
+    <url>http://asgardeo.io</url>
 
     <scm>
-        <url>https://github.com/asgardio/asgardio-java-saml-sdk.git</url>
-        <developerConnection>scm:git:https://github.com/asgardio/asgardio-java-saml-sdk.git</developerConnection>
-        <connection>scm:git:https://github.com/asgardio/asgardio-java-saml-sdk.git</connection>
+        <url>https://github.com/asgardeo/asgardeo-java-saml-sdk.git</url>
+        <developerConnection>scm:git:https://github.com/asgardeo/asgardeo-java-saml-sdk.git</developerConnection>
+        <connection>scm:git:https://github.com/asgardeo/asgardeo-java-saml-sdk.git</connection>
         <tag>HEAD</tag>
     </scm>
 
@@ -266,7 +266,7 @@
     </properties>
 
     <modules>
-        <module>io.asgardio.java.saml.sdk</module>
+        <module>io.asgardeo.java.saml.sdk</module>
     </modules>
 
 </project>
