@@ -44,7 +44,7 @@ Install it as a maven dependency:
 <dependency>
     <groupId>io.asgardeo.java.saml.sdk</groupId>
     <artifactId>io.asgardeo.java.saml.sdk</artifactId>
-    <version>0.1.7</version>
+    <version>0.1.8</version>
 </dependency>
 ```
 The SDK is hosted at the WSO2 Internal Repository. Point to the repository as follows:
