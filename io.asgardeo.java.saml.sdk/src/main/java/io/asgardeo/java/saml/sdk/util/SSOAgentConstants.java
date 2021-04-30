@@ -61,6 +61,7 @@ public class SSOAgentConstants {
         public static final String PASSWORD_FILEPATH = "/conf/password_temp.txt";
         public static final String INDEX_PAGE = "IndexPage";
         public static final String ERROR_PAGE = "ErrorPage";
+        public static final String SKIP_TLS = "SkipTLS";
 
         private SSOAgentConfig() {
 

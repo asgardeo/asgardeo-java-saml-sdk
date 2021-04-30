@@ -72,6 +72,7 @@ public class SSOAgentConfig {
     private Set<String> skipURIs = new HashSet<String>();
     private String indexPage;
     private String errorPage;
+    private Boolean skipTLS = false;
 
     private Map<String, String[]> queryParams = new HashMap<String, String[]>();
 
@@ -144,6 +145,16 @@ public class SSOAgentConfig {
     public void setErrorPage(String errorPage) {
 
         this.errorPage = errorPage;
+    }
+
+    public Boolean getSkipTLS() {
+
+        return skipTLS;
+    }
+
+    public void setSkipTLS(Boolean skipTLS) {
+
+        this.skipTLS = skipTLS;
     }
 
     public Map<String, String[]> getQueryParams() {
@@ -336,6 +347,11 @@ public class SSOAgentConfig {
             skipURIs.add(errorPage);
         } else {
             setErrorPage(indexPage);
+        }
+
+        if (StringUtils.isNotBlank(properties.getProperty(SSOAgentConstants.SSOAgentConfig.SKIP_TLS))) {
+            setSkipTLS(Boolean.parseBoolean(
+                    properties.getProperty(SSOAgentConstants.SSOAgentConfig.SKIP_TLS)));
         }
 
         String queryParamsString = properties.getProperty(SSOAgentConstants.SSOAgentConfig.QUERY_PARAMS);
