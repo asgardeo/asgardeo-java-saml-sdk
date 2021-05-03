@@ -72,6 +72,7 @@ public class SSOAgentConfig {
     private Set<String> skipURIs = new HashSet<String>();
     private String indexPage;
     private String errorPage;
+    private boolean skipKeystoreConfigs = false;
 
     private Map<String, String[]> queryParams = new HashMap<String, String[]>();
 
@@ -290,9 +291,9 @@ public class SSOAgentConfig {
         if (password != null) {
             Arrays.fill(password, (char) 0);
         }
-        privateKeyPassword = properties.getProperty("PrivateKeyPassword");
-        privateKeyAlias = properties.getProperty("PrivateKeyAlias");
-        idpPublicCertAlias = properties.getProperty("IdPPublicCertAlias");
+        privateKeyPassword = getKeystoreConfig(SSOAgentConstants.PRIVATE_KEY_PASSWORD, properties);
+        privateKeyAlias = getKeystoreConfig(SSOAgentConstants.PRIVATE_KEY_ALIAS, properties);
+        idpPublicCertAlias = getKeystoreConfig(SSOAgentConstants.IDP_PUBLIC_CERT_ALIAS, properties);
         requestQueryParameters = properties.getProperty("SAML.Request.Query.Param");
         if (properties.getProperty("SSL.EnableSSLVerification") != null) {
             enableSSLVerification = Boolean.parseBoolean(properties.getProperty("SSL.EnableSSLVerification"));
@@ -389,31 +390,31 @@ public class SSOAgentConfig {
 
         String isAssertionSignedString = properties.getProperty(
                 SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_ASSERTION_SIGNING);
-        if (isAssertionSignedString != null) {
+        if (isAssertionSignedString != null && !skipKeystoreConfigs) {
             saml2.isAssertionSigned = Boolean.parseBoolean(isAssertionSignedString);
         } else {
-            LOGGER.log(Level.FINE, SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_ASSERTION_SIGNING +
-                    " not configured. Defaulting to \'false\'");
+            LOGGER.log(Level.WARNING, SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_ASSERTION_SIGNING +
+                    " not configured or keystore properties not included. Defaulting to \'false\'");
             saml2.isAssertionSigned = false;
         }
 
         String isAssertionEncryptedString = properties.getProperty(
                 SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_ASSERTION_ENCRYPTION);
-        if (isAssertionEncryptedString != null) {
+        if (isAssertionEncryptedString != null && !skipKeystoreConfigs) {
             saml2.isAssertionEncrypted = Boolean.parseBoolean(isAssertionEncryptedString);
         } else {
-            LOGGER.log(Level.FINE, SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_ASSERTION_ENCRYPTION +
-                    " not configured. Defaulting to \'false\'");
+            LOGGER.log(Level.WARNING, SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_ASSERTION_ENCRYPTION +
+                    " not configured or keystore properties not included. Defaulting to \'false\'");
             saml2.isAssertionEncrypted = false;
         }
 
         String isResponseSignedString = properties.getProperty(
                 SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_RESPONSE_SIGNING);
-        if (isResponseSignedString != null) {
+        if (isResponseSignedString != null && !skipKeystoreConfigs) {
             saml2.isResponseSigned = Boolean.parseBoolean(isResponseSignedString);
         } else {
-            LOGGER.log(Level.FINE, SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_RESPONSE_SIGNING +
-                    " not configured. Defaulting to \'false\'");
+            LOGGER.log(Level.WARNING, SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_RESPONSE_SIGNING +
+                    " not configured or keystore properties not included. Defaulting to \'false\'");
             saml2.isResponseSigned = false;
         }
 
@@ -430,11 +431,11 @@ public class SSOAgentConfig {
 
         String isRequestSignedString = properties.getProperty(
                 SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_REQUEST_SIGNING);
-        if (isRequestSignedString != null) {
+        if (isRequestSignedString != null && !skipKeystoreConfigs) {
             saml2.isRequestSigned = Boolean.parseBoolean(isRequestSignedString);
         } else {
-            LOGGER.log(Level.FINE, SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_REQUEST_SIGNING +
-                    " not configured. Defaulting to \'false\'");
+            LOGGER.log(Level.WARNING, SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_REQUEST_SIGNING +
+                    " not configured or keystore properties not included. Defaulting to \'false\'");
             saml2.isRequestSigned = false;
         }
 
@@ -472,7 +473,7 @@ public class SSOAgentConfig {
                 throw new SSOAgentException("Cannot find file " + properties.getProperty("KeyStore"), e);
             }
         }
-        keyStorePassword = properties.getProperty("KeyStorePassword");
+        keyStorePassword = getKeystoreConfig(SSOAgentConstants.KEY_STORE_PASSWORD, properties);
 
         // Check if the assertion validity timeStampSkew is set in config file
         // If that is set, use that as the timeskewperiod
@@ -652,6 +653,15 @@ public class SSOAgentConfig {
             }};
         }
         return trustManagers;
+    }
+
+    private String getKeystoreConfig(String property, Properties properties) {
+
+        if(StringUtils.isNotBlank(properties.getProperty(property))) {
+            return properties.getProperty(property);
+        }
+        skipKeystoreConfigs = true;
+        return null;
     }
 
     public class SAML2 {
