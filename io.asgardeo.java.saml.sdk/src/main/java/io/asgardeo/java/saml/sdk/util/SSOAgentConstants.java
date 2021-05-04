@@ -25,6 +25,7 @@ public class SSOAgentConstants {
     public static final String IDP_PUBLIC_CERT = "IdPPublicCert";
     public static final String PRIVATE_KEY_ALIAS = "PrivateKeyAlias";
     public static final String PRIVATE_KEY_PASSWORD = "PrivateKeyPassword";
+    public static final String KEYSTORE = "KeyStore";
 
     public static final String LOGGER_NAME = "org.wso2.carbon.identity.sso.agent";
 
@@ -61,7 +62,6 @@ public class SSOAgentConstants {
         public static final String PASSWORD_FILEPATH = "/conf/password_temp.txt";
         public static final String INDEX_PAGE = "IndexPage";
         public static final String ERROR_PAGE = "ErrorPage";
-        public static final String SKIP_TLS = "SkipTLS";
 
         private SSOAgentConfig() {
 
