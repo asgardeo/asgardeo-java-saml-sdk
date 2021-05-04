@@ -463,11 +463,11 @@ public class SSOAgentConfig {
         saml2.enableArtifactResolveSigning = StringUtils.equals(
                 properties.getProperty(SSOAgentConstants.SSOAgentConfig.SAML2.ENABLE_ARTIFACT_RESOLVE_SIGNING), "true");
 
-        if (StringUtils.isNotBlank(properties.getProperty("KeyStore"))) {
+        if (StringUtils.isNotBlank(properties.getProperty(SSOAgentConstants.KEYSTORE))) {
             try {
-                keyStoreStream = new FileInputStream(properties.getProperty("KeyStore"));
+                keyStoreStream = new FileInputStream(properties.getProperty(SSOAgentConstants.KEYSTORE));
             } catch (FileNotFoundException e) {
-                throw new SSOAgentException("Cannot find file " + properties.getProperty("KeyStore"), e);
+                throw new SSOAgentException("Cannot find file " + properties.getProperty(SSOAgentConstants.KEYSTORE), e);
             }
         }
         keyStorePassword = getKeystoreConfig(SSOAgentConstants.KEY_STORE_PASSWORD, properties);

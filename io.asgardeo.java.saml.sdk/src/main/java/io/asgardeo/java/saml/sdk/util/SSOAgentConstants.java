@@ -25,6 +25,7 @@ public class SSOAgentConstants {
     public static final String IDP_PUBLIC_CERT = "IdPPublicCert";
     public static final String PRIVATE_KEY_ALIAS = "PrivateKeyAlias";
     public static final String PRIVATE_KEY_PASSWORD = "PrivateKeyPassword";
+    public static final String KEYSTORE = "KeyStore";
 
     public static final String LOGGER_NAME = "org.wso2.carbon.identity.sso.agent";
 
