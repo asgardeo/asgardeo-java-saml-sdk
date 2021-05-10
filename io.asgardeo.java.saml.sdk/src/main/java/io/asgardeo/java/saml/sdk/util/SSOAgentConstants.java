@@ -36,6 +36,7 @@ public class SSOAgentConstants {
     public static final String SSO_AGENT_EXCEPTION = "SSOAgentException";
     public static final String PROPERTY_FILE_PARAMETER_NAME = "property-file";
     public static final String CERTIFICATE_FILE_PARAMETER_NAME = "certificate-file";
+    public static final String POST_BINDING_REQUEST_PAGE_PARAMETER_NAME = "post-binding-request-page";
 
     private SSOAgentConstants() {
 

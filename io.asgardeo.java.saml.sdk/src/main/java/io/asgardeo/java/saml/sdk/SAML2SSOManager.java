@@ -310,29 +310,7 @@ public class SAML2SSOManager {
             }
 
         }
-        String htmlPayload = ssoAgentConfig.getSAML2().getPostBindingRequestHTMLPayload();
-        if (htmlPayload == null || !htmlPayload.contains("<!--$saml_params-->")) {
-            htmlPayload = "<html>\n" +
-                    "<body>\n" +
-                    "<p>You are now redirected back to " + ssoAgentConfig.getSAML2().getIdPURL() + " \n" +
-                    "If the redirection fails, please click the post button.</p>\n" +
-                    "<form method='post' action='" + ssoAgentConfig.getSAML2().getIdPURL() + "'>\n" +
-                    "<p>\n" +
-                    htmlParams.toString() +
-                    "<button type='submit'>POST</button>\n" +
-                    "</p>\n" +
-                    "</form>\n" +
-                    "<script type='text/javascript'>\n" +
-                    "document.forms[0].submit();\n" +
-                    "</script>\n" +
-                    "</body>\n" +
-                    "</html>";
-        } else {
-            htmlPayload = htmlPayload.replace("<!--$saml_params-->",
-                    htmlParams.toString());
-        }
-        return htmlPayload;
-
+        return createBaseFormPage(htmlParams.toString(), ssoAgentConfig.getSAML2().getIdPURL());
     }
 
     public String buildPostResponse(SignableSAMLObject requestMessage) throws SSOAgentException {
@@ -367,6 +345,33 @@ public class SAML2SSOManager {
         } else {
             throw new SSOAgentException("Invalid SAML2 Response. SAML2 Response can not be null.");
         }
+    }
+
+    private String createBaseFormPage(String params, String redirectURI) {
+
+        String htmlPayload = ssoAgentConfig.getSAML2().getPostBindingRequestHTMLPayload();
+        if (StringUtils.isNotBlank(htmlPayload) && htmlPayload.contains("<!--$saml_params-->")) {
+            String newPage = htmlPayload;
+            String pageWithRedirectURI = newPage.replace("$redirectURI", redirectURI);
+            return pageWithRedirectURI.replace("<!--$saml_params-->", params);
+        } else {
+            htmlPayload = "<html>\n" +
+                    "<body>\n" +
+                    "<p>You are now redirected back to " + redirectURI + " \n" +
+                    "If the redirection fails, please click the post button.</p>\n" +
+                    "<form method='post' action='" + redirectURI + "'>\n" +
+                    "<p>\n" +
+                    params +
+                    "<button type='submit'>POST</button>\n" +
+                    "</p>\n" +
+                    "</form>\n" +
+                    "<script type='text/javascript'>\n" +
+                    "document.forms[0].submit();\n" +
+                    "</script>\n" +
+                    "</body>\n" +
+                    "</html>";
+        }
+        return htmlPayload;
     }
 
     private void validateInResponseTo(StatusResponseType samlResponse, HttpSession session) throws SSOAgentException {
