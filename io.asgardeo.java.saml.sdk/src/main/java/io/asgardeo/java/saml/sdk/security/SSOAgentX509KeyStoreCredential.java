@@ -101,11 +101,11 @@ public class SSOAgentX509KeyStoreCredential implements SSOAgentX509Credential {
             throws SSOAgentException {
 
         try {
-            if (StringUtils.isNotEmpty(publicCertAlias)) {
-                entityCertificate = (X509Certificate) keyStore.getCertificate(publicCertAlias);
-            } else if (StringUtils.isNotEmpty(publicCertEncoded)) {
+            if (StringUtils.isNotEmpty(publicCertEncoded)) {
                 entityCertificate = inferPublicCertFromEncodedString(publicCertEncoded);
-            }
+            } else if (StringUtils.isNotEmpty(publicCertAlias)) {
+                entityCertificate = (X509Certificate) keyStore.getCertificate(publicCertAlias);
+            } 
         } catch (KeyStoreException e) {
             throw new SSOAgentException(
                     "Error occurred while retrieving public certificate for alias " +
