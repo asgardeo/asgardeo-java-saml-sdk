@@ -396,15 +396,14 @@ public class SAML2SSOManager {
 
     private void setIDtoSession(HttpSession httpSession, String saml2RequestId) {
 
+        ArrayList<String> samlRequestIDs;
         if (httpSession.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME) != null) {
-            ArrayList<String> samlRequestIDs =
+            samlRequestIDs =
                     (ArrayList<String>) httpSession.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME);
-            if (!samlRequestIDs.contains(saml2RequestId)) {
-                samlRequestIDs.add(saml2RequestId);
-                httpSession.setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME, samlRequestIDs);
-            }
         } else {
-            ArrayList<String> samlRequestIDs = new ArrayList<>();
+            samlRequestIDs = new ArrayList<>();
+        }
+        if (!samlRequestIDs.contains(saml2RequestId)) {
             samlRequestIDs.add(saml2RequestId);
             httpSession.setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME, samlRequestIDs);
         }
