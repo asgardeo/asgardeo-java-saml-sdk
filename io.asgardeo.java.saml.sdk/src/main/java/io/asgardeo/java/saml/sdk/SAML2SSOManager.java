@@ -377,23 +377,36 @@ public class SAML2SSOManager {
     private void validateInResponseTo(StatusResponseType samlResponse, HttpSession session) throws SSOAgentException {
 
         String inResponseToValue = samlResponse.getInResponseTo();
+        if (session == null) {
+            throw new InvalidSessionException("Session is expired or user already logged out.");
+        }
         if (StringUtils.isNotBlank(inResponseToValue)) {
-            if (session != null && session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME) != null) {
-                String requestId = (String) session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME);
-                session.removeAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME);
-                if (requestId.equals(inResponseToValue)) {
-                    LOGGER.log(Level.FINE, "InResponseTo Validation successful.");
+            if (session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME) != null) {
+                ArrayList<String> requestIds =
+                        (ArrayList<String>) session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME);
+                if (requestIds.contains(inResponseToValue)) {
+                    requestIds.remove(inResponseToValue);
                     return;
                 }
             }
             log.fatal(String.format("Validation failed for InResponseTo ID: %s", inResponseToValue));
-            throw new SSOAgentException("ID validation failed.");
+            throw new SSOAgentException("Invalid or already used \"InResponseTo\" value found in the SAML response.");
         }
     }
 
     private void setIDtoSession(HttpSession httpSession, String saml2RequestId) {
 
-        httpSession.setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_NAME, saml2RequestId);
+        ArrayList<String> samlRequestIDs;
+        if (httpSession.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME) != null) {
+            samlRequestIDs =
+                    (ArrayList<String>) httpSession.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME);
+        } else {
+            samlRequestIDs = new ArrayList<>();
+        }
+        if (!samlRequestIDs.contains(saml2RequestId)) {
+            samlRequestIDs.add(saml2RequestId);
+            httpSession.setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME, samlRequestIDs);
+        }
     }
 
     /**
