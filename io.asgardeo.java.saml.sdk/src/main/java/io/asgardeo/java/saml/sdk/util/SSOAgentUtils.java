@@ -26,6 +26,7 @@ import org.apache.xerces.impl.Constants;
 import org.apache.xerces.util.SecurityManager;
 import org.apache.xml.security.c14n.Canonicalizer;
 import org.apache.xml.security.signature.XMLSignature;
+import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.XMLObjectBuilder;
@@ -164,7 +165,7 @@ public class SSOAgentUtils {
                         .soap.config.XMLObjectProviderInitializer();
                 soapXMLObjectProviderInitializer.init();
                 isBootStrapped = true;
-            } catch (Exception e) {
+            } catch (InitializationException e) {
                 throw new SSOAgentException("Error in bootstrapping the OpenSAML3 library", e);
             }  finally {
                 thread.setContextClassLoader(originalClassLoader);
