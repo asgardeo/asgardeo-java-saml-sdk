@@ -22,7 +22,6 @@ package io.asgardeo.java.saml.sdk.bean;
 
 import io.asgardeo.java.saml.sdk.AESDecryptor;
 import io.asgardeo.java.saml.sdk.exception.SSOAgentException;
-import io.asgardeo.java.saml.sdk.security.SSOAgentCarbonX509Credential;
 import io.asgardeo.java.saml.sdk.security.SSOAgentX509Credential;
 import io.asgardeo.java.saml.sdk.util.SSOAgentConstants;
 import org.apache.commons.lang.ArrayUtils;
@@ -538,9 +537,7 @@ public class SSOAgentConfig {
         if (isSAML2SSOLoginEnabled &&
                 (saml2.isAssertionSigned || saml2.isAssertionEncrypted || saml2.isResponseSigned ||
                         saml2.isRequestSigned) && saml2.ssoAgentX509Credential == null) {
-            LOGGER.log(Level.FINE,
-                    "\'SSOAgentX509Credential\' not configured. Defaulting to " +
-                            SSOAgentCarbonX509Credential.class.getName());
+            throw new SSOAgentException("\'SSOAgentX509Credential\' not configured");
         }
 
         if (isSAML2SSOLoginEnabled &&
