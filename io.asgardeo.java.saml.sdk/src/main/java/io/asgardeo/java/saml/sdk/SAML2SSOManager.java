@@ -123,8 +123,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import static org.wso2.carbon.CarbonConstants.AUDIT_LOG;
-
 /**
  * TODO: Need to have mechanism to map SP initiated SAML2 Request to SAML2 Responses and validate.
  * TODO: Still however IdP initiated SSO also should be possible through configuration
@@ -377,11 +375,8 @@ public class SAML2SSOManager {
     private void validateInResponseTo(StatusResponseType samlResponse, HttpSession session) throws SSOAgentException {
 
         String inResponseToValue = samlResponse.getInResponseTo();
-        if (session == null) {
-            throw new InvalidSessionException("Session is expired or user already logged out.");
-        }
         if (StringUtils.isNotBlank(inResponseToValue)) {
-            if (session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME) != null) {
+            if (session != null && session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME) != null) {
                 ArrayList<String> requestIds =
                         (ArrayList<String>) session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME);
                 if (requestIds.contains(inResponseToValue)) {
@@ -1062,7 +1057,6 @@ public class SAML2SSOManager {
         } catch (SignatureException ex) {
             String logMsg = "Signature do not confirm to SAML signature profile. Possible XML Signature " +
                     "Wrapping  Attack!";
-            AUDIT_LOG.warn(logMsg);
             if (log.isDebugEnabled()) {
                 log.debug(logMsg, ex);
             }
