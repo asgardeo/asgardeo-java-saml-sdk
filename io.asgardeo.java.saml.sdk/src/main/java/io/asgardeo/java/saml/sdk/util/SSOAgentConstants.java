@@ -26,6 +26,7 @@ public class SSOAgentConstants {
     public static final String PRIVATE_KEY_ALIAS = "PrivateKeyAlias";
     public static final String PRIVATE_KEY_PASSWORD = "PrivateKeyPassword";
     public static final String KEYSTORE = "KeyStore";
+    public static final String IDLE_TIME_OUT_IN_MINUTES = "IdleTimeOutInMinutes";
 
     public static final String LOGGER_NAME = "org.wso2.carbon.identity.sso.agent";
 

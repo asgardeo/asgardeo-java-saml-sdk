@@ -24,6 +24,7 @@ import io.asgardeo.java.saml.sdk.bean.SSOAgentConfig;
 import io.asgardeo.java.saml.sdk.exception.ArtifactResolutionException;
 import io.asgardeo.java.saml.sdk.exception.InvalidSessionException;
 import io.asgardeo.java.saml.sdk.exception.SSOAgentException;
+import io.asgardeo.java.saml.sdk.request.SAML2RequestDataHolder;
 import io.asgardeo.java.saml.sdk.security.X509CredentialImpl;
 import io.asgardeo.java.saml.sdk.session.management.SSOAgentSessionManager;
 import io.asgardeo.java.saml.sdk.util.SSOAgentConstants;
@@ -117,7 +118,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
-
 import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -183,7 +183,6 @@ public class SAML2SSOManager {
                 throw new SSOAgentException("SLO Request can not be built. SSO Session is NULL");
             }
         }
-        setIDtoSession(httpSession, requestMessage.getID());
 
         String idpUrl = null;
 
@@ -194,7 +193,7 @@ public class SAML2SSOManager {
                         "=" + encodedRequestMessage);
 
         String relayState = request.getParameter(RelayState.DEFAULT_ELEMENT_LOCAL_NAME);
-        if (StringUtils.isNotEmpty(relayState)) {
+        if (StringUtils.isBlank(relayState)) {
             relayState = ssoAgentConfig.getSAML2().getRelayState();
         }
         if (relayState != null) {
@@ -252,7 +251,6 @@ public class SAML2SSOManager {
         if (!isLogout) {
             HttpSession httpSession = request.getSession();
             requestMessage = buildAuthnRequest(request);
-            setIDtoSession(httpSession, requestMessage.getID());
             if (ssoAgentConfig.getSAML2().isRequestSigned()) {
                 requestMessage = SSOAgentUtils.setSignature((AuthnRequest) requestMessage,
                         XMLSignature.ALGO_ID_SIGNATURE_RSA,
@@ -270,7 +268,6 @@ public class SAML2SSOManager {
             if (sessionBean != null) {
                 requestMessage = buildLogoutRequest(sessionBean.getSAML2SSO()
                         .getSubjectId(), sessionBean.getSAML2SSO().getSessionIndex());
-                setIDtoSession(httpSession, requestMessage.getID());
                 if (ssoAgentConfig.getSAML2().isRequestSigned()) {
                     requestMessage = SSOAgentUtils.setSignature((LogoutRequest) requestMessage,
                             XMLSignature.ALGO_ID_SIGNATURE_RSA,
@@ -372,36 +369,20 @@ public class SAML2SSOManager {
         return htmlPayload;
     }
 
-    private void validateInResponseTo(StatusResponseType samlResponse, HttpSession session) throws SSOAgentException {
+    private void validateInResponseTo(StatusResponseType samlResponse, boolean isLoginResponse)
+            throws SSOAgentException {
 
-        String inResponseToValue = samlResponse.getInResponseTo();
-        if (StringUtils.isNotBlank(inResponseToValue)) {
-            if (session != null && session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME) != null) {
-                ArrayList<String> requestIds =
-                        (ArrayList<String>) session.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME);
-                if (requestIds.contains(inResponseToValue)) {
-                    requestIds.remove(inResponseToValue);
-                    return;
-                }
-            }
-            log.fatal(String.format("Validation failed for InResponseTo ID: %s", inResponseToValue));
+        String inResponseTo = samlResponse.getInResponseTo();
+
+        if (StringUtils.isBlank(inResponseTo)) {
+            return;
+        }
+
+        if (!SAML2RequestDataHolder.getInstance().isValidInResponseToId(inResponseTo, isLoginResponse)) {
+            log.fatal(String.format("Validation failed for InResponseTo ID: %s", inResponseTo));
             throw new SSOAgentException("Invalid or already used \"InResponseTo\" value found in the SAML response.");
         }
-    }
-
-    private void setIDtoSession(HttpSession httpSession, String saml2RequestId) {
-
-        ArrayList<String> samlRequestIDs;
-        if (httpSession.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME) != null) {
-            samlRequestIDs =
-                    (ArrayList<String>) httpSession.getAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME);
-        } else {
-            samlRequestIDs = new ArrayList<>();
-        }
-        if (!samlRequestIDs.contains(saml2RequestId)) {
-            samlRequestIDs.add(saml2RequestId);
-            httpSession.setAttribute(SSOAgentConstants.SAML2SSO.ID_ATTRIB_LIST_NAME, samlRequestIDs);
-        }
+        SAML2RequestDataHolder.getInstance().removeRequestId(inResponseTo);
     }
 
     /**
@@ -515,7 +496,7 @@ public class SAML2SSOManager {
                  * invalidated by the system
                  */
                 LogoutResponse logoutResponse = ((LogoutResponse) saml2Object);
-                validateInResponseTo(logoutResponse, request.getSession(false));
+                validateInResponseTo(logoutResponse, false);
                 Set<HttpSession> sessions =
                         SSOAgentSessionManager.invalidateAllSessions(request.getSession(false));
                 for (HttpSession session : sessions) {
@@ -593,7 +574,7 @@ public class SAML2SSOManager {
         }
         if (assertion == null) {
             if (isNoPassive(saml2Response)) {
-                validateInResponseTo(saml2Response, servletRequest.getSession(false));
+                validateInResponseTo(saml2Response, true);
                 LOGGER.log(Level.FINE, "Cannot authenticate in passive mode");
                 servletRequest.setAttribute(
                         SSOAgentConstants.SHOULD_GO_TO_WELCOME_PAGE,
@@ -621,7 +602,7 @@ public class SAML2SSOManager {
         // validate signature
         validateSignature(saml2Response, assertion);
 
-        validateInResponseTo(saml2Response, servletRequest.getSession(false));
+        validateInResponseTo(saml2Response, true);
 
         // Get the subject name from the Response Object and forward it to login_action.jsp
         String subject = null;
@@ -681,6 +662,7 @@ public class SAML2SSOManager {
         LogoutRequest logoutReq = new LogoutRequestBuilder().buildObject();
 
         logoutReq.setID(SSOAgentUtils.createID());
+        SAML2RequestDataHolder.getInstance().addLogoutRequest(logoutReq.getID());
         logoutReq.setDestination(ssoAgentConfig.getSAML2().getIdPURL());
 
         DateTime issueInstant = new DateTime();
@@ -776,6 +758,7 @@ public class SAML2SSOManager {
         authRequest.setNameIDPolicy(nameIdPolicy);
         authRequest.setRequestedAuthnContext(requestedAuthnContext);
         authRequest.setID(SSOAgentUtils.createID());
+        SAML2RequestDataHolder.getInstance().addLoginRequest(authRequest.getID());
         authRequest.setVersion(SAMLVersion.VERSION_20);
         authRequest.setDestination(ssoAgentConfig.getSAML2().getIdPURL());
         if (request.getAttribute(Extensions.DEFAULT_ELEMENT_LOCAL_NAME) != null) {
