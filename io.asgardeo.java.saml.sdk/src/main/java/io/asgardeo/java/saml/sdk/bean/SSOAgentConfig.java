@@ -22,6 +22,7 @@ package io.asgardeo.java.saml.sdk.bean;
 
 import io.asgardeo.java.saml.sdk.AESDecryptor;
 import io.asgardeo.java.saml.sdk.exception.SSOAgentException;
+import io.asgardeo.java.saml.sdk.request.SAML2IdleRequestCleanupTask;
 import io.asgardeo.java.saml.sdk.security.SSOAgentX509Credential;
 import io.asgardeo.java.saml.sdk.util.SSOAgentConstants;
 import org.apache.commons.lang.ArrayUtils;
@@ -48,9 +49,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -85,6 +88,7 @@ public class SSOAgentConfig {
     private String privateKeyPassword;
     private String privateKeyAlias;
     private String idpPublicCertAlias;
+    private int idleTimeOutInMinutes;
 
     public Boolean getEnableHostNameVerification() {
 
@@ -214,6 +218,16 @@ public class SSOAgentConfig {
     public void setKeyStore(KeyStore keyStore) {
 
         this.keyStore = keyStore;
+    }
+
+    public int getIdleTimeOutInMinutes() {
+
+        return idleTimeOutInMinutes;
+    }
+
+    public void setIdleTimeOutInMinutes(int idleTimeOutInMinutes) {
+
+        this.idleTimeOutInMinutes = idleTimeOutInMinutes;
     }
 
     public void initConfig(Properties properties) throws SSOAgentException {
@@ -362,6 +376,24 @@ public class SSOAgentConfig {
                 }
             }
         }
+
+        if (StringUtils.isNotBlank(properties.getProperty(SSOAgentConstants.IDLE_TIME_OUT_IN_MINUTES))) {
+            try {
+                idleTimeOutInMinutes = Integer.parseInt(properties.getProperty(SSOAgentConstants.IDLE_TIME_OUT_IN_MINUTES));
+            } catch (NumberFormatException e) {
+                idleTimeOutInMinutes = 1440;
+                LOGGER.info("\'IdleTimeOutInMinutes\' value is invalid. Defaulting to \'1440\' (One day).");
+            }
+        }
+
+        if (idleTimeOutInMinutes <= 0) {
+            idleTimeOutInMinutes = 1440;
+            LOGGER.info("\'IdleTimeOutInMinutes\' value is not configured or invalid. Defaulting to \'1440\' "
+                    + "(One day).");
+        }
+
+        // Schedule invalid request cleanup task.
+        scheduleIdleRequestCleanupTask(idleTimeOutInMinutes);
 
         saml2.httpBinding = properties.getProperty(SSOAgentConstants.SSOAgentConfig.SAML2.HTTP_BINDING);
         if (saml2.httpBinding == null || saml2.httpBinding.isEmpty()) {
@@ -551,6 +583,12 @@ public class SSOAgentConfig {
                 saml2.ssoAgentX509Credential.getPrivateKey() == null) {
             throw new SSOAgentException("Private key of SP not configured");
         }
+    }
+
+    private static void scheduleIdleRequestCleanupTask(int idleTimeOutInMinutes) {
+
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(new SAML2IdleRequestCleanupTask(idleTimeOutInMinutes), 6, 6, TimeUnit.HOURS);
     }
 
     /**
