@@ -169,6 +169,11 @@
                 <artifactId>commons-collections</artifactId>
                 <version>${commons.collections.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -191,6 +196,25 @@
                         <doCheck>false</doCheck>
                         <doUpdate>false</doUpdate>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -255,6 +279,8 @@
         <owasp.encoder.version>1.2.3</owasp.encoder.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <maven.buildnumber.plugin.version>1.4</maven.buildnumber.plugin.version>
+    
+        <jacoco.version>0.8.6</jacoco.version>
     </properties>
 
     <modules>
